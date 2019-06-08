@@ -89,31 +89,52 @@ function purchaseItem() {
                 type: "input",
                 message: "Enter Number of Units: ",
                 validate: function (value) {
-                    return isNumeric(value);
+                    return validateQuantity(value);
                 }
             }
         ])
         .then(function (answer) {
-            console.log(answer.itemID);
-            console.log(answer.orderQuantity);
-            // when finished prompting, insert a new item into the db with that info
-            // connection.query(
-            //     "INSERT INTO auctions SET ?",
-            //     {
-            //         item_name: answer.item,
-            //         category: answer.category,
-            //         starting_bid: answer.startingBid || 0,
-            //         highest_bid: answer.startingBid || 0
-            //     },
-            //     function (err) {
-            //         if (err) throw err;
-            //         console.log("Your auction was created successfully!");
-            //         // re-prompt the user for if they want to bid or post
-            //         start();
-            //     }
-            // );
-            connection.end();
+
+            // if(quantityInStock(answer.itemID, answer.orderQuantity)) {
+            //     console.log("place order");
+            //     connection.end();
+            // }
+            // else {
+            //     console.log("Insufficient Quantity");
+            //     connection.end();
+            // }
+            connection.query("SELECT * FROM products WHERE item_id=?", [answer.itemID], function (err, response) {
+                if (err) throw err;
+
+                console.log(response);
+                console.log("response.stock_quantity: " + response[0].stock_quantity);
+                console.log("answer.orderQuantity: " + answer.orderQuantity);
+
+                if (parseInt(response[0].stock_quantity) >= parseInt(answer.orderQuantity)) {
+                    console.log("place order");
+                    connection.end();
+                }
+                else {
+                    console.log("Insufficient Quantity");
+                    connection.end();
+                }
+            })
         });
+
+    // function quantityInStock(id, quantity) {
+    //     connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
+    //         if (err) throw err;
+
+    //         console.log(response);
+    //         if (parseInt(response[0].stock_quantity) >= parseInt(quantity)) {
+    //             console.log("place order");
+    //             return true;
+    //         }
+    //         else {
+    //             return false;
+    //         }
+    //     })
+    // }
 
     /**
      * Validate the input from the ID List
@@ -127,13 +148,14 @@ function purchaseItem() {
     }
 
     /**
-     * Validate is Numeric
+     * Validate that the requested quatity is numeric 
+     * and that there is enough in stock
      * @param value 
      */
-    function isNumeric(value) {
-        if (isNaN(value) === false) {
-            return true;
+    function validateQuantity(value) {
+        if (isNaN(value) === true) {
+            return "Value Must Be Numeric";
         }
-        return "Value Must Be Numeric";
+        return true;
     }
 }
