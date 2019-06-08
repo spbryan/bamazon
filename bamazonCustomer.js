@@ -94,31 +94,7 @@ function purchaseItem() {
             }
         ])
         .then(function (answer) {
-
-            // if(quantityInStock(answer.itemID, answer.orderQuantity)) {
-            //     console.log("place order");
-            //     connection.end();
-            // }
-            // else {
-            //     console.log("Insufficient Quantity");
-            //     connection.end();
-            // }
-            connection.query("SELECT * FROM products WHERE item_id=?", [answer.itemID], function (err, response) {
-                if (err) throw err;
-
-                console.log(response);
-                console.log("response.stock_quantity: " + response[0].stock_quantity);
-                console.log("answer.orderQuantity: " + answer.orderQuantity);
-
-                if (parseInt(response[0].stock_quantity) >= parseInt(answer.orderQuantity)) {
-                    console.log("place order");
-                    connection.end();
-                }
-                else {
-                    console.log("Insufficient Quantity");
-                    connection.end();
-                }
-            })
+            verifyQuantity(answer.itemID, answer.orderQuantity);
         });
 
     // function quantityInStock(id, quantity) {
@@ -135,6 +111,39 @@ function purchaseItem() {
     //         }
     //     })
     // }
+
+    function verifyQuantity(id, quantity) {
+        connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
+            if (err) throw err;
+            var stockQuantity = parseInt(response[0].stock_quantity);
+            var orderQuantity = parseInt(quantity);
+            if (stockQuantity >= orderQuantity) {
+                var newQuantity = stockQuantity - orderQuantity;
+                placeOrder(id, newQuantity);
+            }
+            else {
+                console.log("Insufficient Quantity");
+                purchaseItem();
+            }
+        })
+    }
+
+    function placeOrder(id, newQuantity) {
+        connection.query("UPDATE products SET ? WHERE ?",
+            [
+                {
+                    stock_quantity: newQuantity
+                },
+                {
+                    item_id: id
+                }
+            ], function (err, response) {
+                if (err) throw err;
+                console.log("Order Has Been Placed!");
+                console.log("updated rows: " + response.affectedRows);
+                start();
+            })
+    }
 
     /**
      * Validate the input from the ID List
