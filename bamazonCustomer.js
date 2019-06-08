@@ -7,6 +7,7 @@ var mysql = require("mysql");
 var table = require("console.table");
 var inquirer = require("inquirer");
 var idList = [];
+var tableValues = [];
 
 /**
  * Create MySQL Database Connection
@@ -26,20 +27,35 @@ connection.connect(function (err) {
 
 function start() {
     idList = [];
-    connection.query("SELECT * FROM products", function (err, response) {
-        if (err) throw err;
-        displayInventory(response);
-        purchaseItem();
-    })
+    tableValues = [];
+    inquirer
+        .prompt([
+            {
+                name: "placeOrder",
+                type: "confirm",
+                message: "Would You Like to Place an Order?"
+            }
+        ])
+        .then(function (answer) {
+            if (answer.placeOrder) {
+                connection.query("SELECT * FROM products", function (err, response) {
+                    if (err) throw err;
+                    displayInventory(response);
+                    purchaseItem();
+                })
+            }
+            else {
+                connection.end();
+            }
+        });
 
-    connection.end();
+    // connection.end();
 }
 
 /**
  * Select items from the products table
  */
 function displayInventory(response) {
-    var tableValues = [];
     for (var i = 0; i < response.length; i++) {
         idList.push(response[i].item_id.toString());
         tableValues.push(
@@ -96,6 +112,7 @@ function purchaseItem() {
             //         start();
             //     }
             // );
+            connection.end();
         });
 
     /**
@@ -103,7 +120,7 @@ function purchaseItem() {
      * @param value 
      */
     function validateItemID(value) {
-        if (idList.indexOf(value) > 0) {
+        if (idList.indexOf(value) > -1) {
             return true;
         }
         return "Invalid ID Value";
