@@ -58,6 +58,9 @@ function userOptions() {
         });
 }
 
+/**
+ * Select current details from the table
+ */
 function viewProducts() {
     clearConsole();
     connection.query("SELECT * FROM products", function (err, response) {
@@ -67,6 +70,9 @@ function viewProducts() {
     })
 }
 
+/**
+ * Select product details where inventory is below a set value
+ */
 function viewLowInventory() {
     clearConsole();
     connection.query("SELECT * FROM products WHERE stock_quantity < 5", function (err, response) {
@@ -76,6 +82,9 @@ function viewLowInventory() {
     })
 }
 
+/**
+ * Update the quantity of a specified inventory item
+ */
 function addToInventory() {
     clearConsole();
     inquirer.prompt([
@@ -100,13 +109,48 @@ function addToInventory() {
     });
 }
 
+/**
+ * Add a new item to the inventory
+ */
 function addNewProduct() {
-    console.log("Inside addNewProduct");
-    connection.end();
+    clearConsole();
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "productName",
+            message: "Enter Name of Product:"
+        },
+        {
+            type: "input",
+            name: "department",
+            message: "Enter Product Department:"
+        },
+        {
+            type: "input",
+            name: "price",
+            message: "Enter Price Per Unit:",
+            validate: function (value) {
+                return validateIsNumeric(value);
+            }
+        },
+        {
+            type: "input",
+            name: "count",
+            message: "Enter Number of Units:",
+            validate: function (value) {
+                return validateIsNumeric(value);
+            }
+        }
+    ]).then(function (answer) {
+        addProduct(answer.productName, answer.department,
+            parseFloat(answer.price), parseInt(answer.count));
+    });
 }
 
+/**
+ * Close the data base connection
+ */
 function closeAndExit() {
-    console.log("Inside closeAndExit");
     connection.end();
 }
 
@@ -128,6 +172,11 @@ function displayInventory(response) {
     console.table(tableValues);
 }
 
+/**
+ * SQL to update the stock quantity of the products table
+ * @param id 
+ * @param addUnits 
+ */
 function updateQuantity(id, addUnits) {
     connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
         if (err) throw err;
@@ -153,10 +202,61 @@ function updateQuantity(id, addUnits) {
     })
 }
 
+/**
+ * SQL to add a new item to the inventory
+ * @param name 
+ * @param department 
+ * @param price 
+ * @param count 
+ */
+function addProduct(name, department, price, count) {
+    connection.query("INSERT INTO products SET ?",
+        {
+            product_name: name,
+            department_name: department,
+            price: price,
+            stock_quantity: count
+        }
+        , function (err, response) {
+            if (err) throw err;
+            clearConsole();
+            consoleMessage("Added new item to Inventory");
+            displayEntry(name, department, price, count);
+            userOptions();
+        })
+}
+
+/**
+ * Display an inventory item
+ * @param name 
+ * @param department 
+ * @param price 
+ * @param quantity 
+ */
+function displayEntry(name, department, price, quantity) {
+    tableValues = [];
+    tableValues.push(
+        {
+            ID: name,
+            Name: department,
+            Price: "$" + price.toFixed(2),
+            Quantity: quantity
+        }
+    )
+    console.table(tableValues);
+}
+
+/**
+ * Clear the console
+ */
 function clearConsole() {
     process.stdout.write('\x1B[2J\x1B[0f');
 }
 
+/**
+ * Format a console message
+ * @param message 
+ */
 function consoleMessage(message) {
     console.log("  ");
     console.log("+----------------------------------------------------------+");
