@@ -25,6 +25,9 @@ connection.connect(function (err) {
     start();
 });
 
+/**
+ * Starting point for the customer options
+ */
 function start() {
     idList = [];
     tableValues = [];
@@ -48,8 +51,6 @@ function start() {
                 connection.end();
             }
         });
-
-    // connection.end();
 }
 
 /**
@@ -96,77 +97,73 @@ function purchaseItem() {
         .then(function (answer) {
             verifyQuantity(answer.itemID, answer.orderQuantity);
         });
+}
 
-    // function quantityInStock(id, quantity) {
-    //     connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
-    //         if (err) throw err;
+/**
+ * Select item from the data base and verify that enough inventory is
+ * available to meet the order
+ * @param id 
+ * @param quantity 
+ */
+function verifyQuantity(id, quantity) {
+    connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
+        if (err) throw err;
+        var stockQuantity = parseInt(response[0].stock_quantity);
+        var orderQuantity = parseInt(quantity);
+        if (stockQuantity >= orderQuantity) {
+            var newQuantity = stockQuantity - orderQuantity;
+            var itemPrice = parseInt(response[0].price);
+            console.log("Total Order Amount: $" + itemPrice * orderQuantity);
+            placeOrder(id, newQuantity);
+        }
+        else {
+            console.log("Insufficient Quantity");
+            purchaseItem();
+        }
+    })
+}
 
-    //         console.log(response);
-    //         if (parseInt(response[0].stock_quantity) >= parseInt(quantity)) {
-    //             console.log("place order");
-    //             return true;
-    //         }
-    //         else {
-    //             return false;
-    //         }
-    //     })
-    // }
-
-    function verifyQuantity(id, quantity) {
-        connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
+/**
+ * Update the data base with the correct values following a successful order
+ * @param id 
+ * @param newQuantity 
+ */
+function placeOrder(id, newQuantity) {
+    connection.query("UPDATE products SET ? WHERE ?",
+        [
+            {
+                stock_quantity: newQuantity
+            },
+            {
+                item_id: id
+            }
+        ], function (err, response) {
             if (err) throw err;
-            var stockQuantity = parseInt(response[0].stock_quantity);
-            var orderQuantity = parseInt(quantity);
-            if (stockQuantity >= orderQuantity) {
-                var newQuantity = stockQuantity - orderQuantity;
-                var itemPrice = parseInt(response[0].price);
-                console.log("Total Order Amount: $" + itemPrice * orderQuantity);
-                placeOrder(id, newQuantity);
-            }
-            else {
-                console.log("Insufficient Quantity");
-                purchaseItem();
-            }
+            console.log("Order Has Been Placed!");
+            console.log("updated rows: " + response.affectedRows);
+            start();
         })
-    }
+}
 
-    function placeOrder(id, newQuantity) {
-        connection.query("UPDATE products SET ? WHERE ?",
-            [
-                {
-                    stock_quantity: newQuantity
-                },
-                {
-                    item_id: id
-                }
-            ], function (err, response) {
-                if (err) throw err;
-                console.log("Order Has Been Placed!");
-                console.log("updated rows: " + response.affectedRows);
-                start();
-            })
-    }
-
-    /**
-     * Validate the input from the ID List
-     * @param value 
-     */
-    function validateItemID(value) {
-        if (idList.indexOf(value) > -1) {
-            return true;
-        }
-        return "Invalid ID Value";
-    }
-
-    /**
-     * Validate that the requested quatity is numeric 
-     * and that there is enough in stock
-     * @param value 
-     */
-    function validateQuantity(value) {
-        if (isNaN(value) === true) {
-            return "Value Must Be Numeric";
-        }
+/**
+ * Validate the input from the ID List
+ * @param value 
+ */
+function validateItemID(value) {
+    if (idList.indexOf(value) > -1) {
         return true;
     }
+    return "Invalid ID Value";
+}
+
+/**
+ * Validate that the requested quatity is numeric 
+ * and that there is enough in stock
+ * @param value 
+ */
+function validateQuantity(value) {
+    if (isNaN(value) === true) {
+        return "Value Must Be Numeric";
+    }
+    return true;
 }
