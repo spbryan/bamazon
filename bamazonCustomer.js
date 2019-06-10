@@ -119,6 +119,8 @@ function purchaseItem() {
             var orderQuantity = parseInt(quantity);
             if (stockQuantity >= orderQuantity) {
                 var newQuantity = stockQuantity - orderQuantity;
+                var itemPrice = parseInt(response[0].price);
+                console.log("Total Order Amount: $" + itemPrice * orderQuantity);
                 placeOrder(id, newQuantity);
             }
             else {
