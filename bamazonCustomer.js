@@ -113,8 +113,9 @@ function verifyQuantity(id, quantity) {
         if (stockQuantity >= orderQuantity) {
             var newQuantity = stockQuantity - orderQuantity;
             var itemPrice = parseInt(response[0].price);
-            console.log("Total Order Amount: $" + itemPrice * orderQuantity);
-            placeOrder(id, newQuantity);
+            var productSales = itemPrice * orderQuantity;
+            console.log("Total Order Amount: $" + productSales);
+            placeOrder(id, newQuantity, productSales);
         }
         else {
             console.log("Insufficient Quantity");
@@ -127,12 +128,14 @@ function verifyQuantity(id, quantity) {
  * Update the data base with the correct values following a successful order
  * @param id 
  * @param newQuantity 
+ * @param productSales 
  */
-function placeOrder(id, newQuantity) {
+function placeOrder(id, newQuantity, productSales) {
     connection.query("UPDATE products SET ? WHERE ?",
         [
             {
-                stock_quantity: newQuantity
+                stock_quantity: newQuantity,
+                product_sales: productSales
             },
             {
                 item_id: id
