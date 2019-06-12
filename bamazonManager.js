@@ -114,7 +114,7 @@ function addToInventory() {
  */
 function addNewProduct() {
     clearConsole();
-    connection.query("SELECT DISTINCT department_name FROM products", function (err, response) {
+    connection.query("SELECT DISTINCT department_name FROM departments", function (err, response) {
         if (err) throw err;
         var departments = [];
 

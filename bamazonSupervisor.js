@@ -6,7 +6,6 @@
 var mysql = require("mysql");
 var table = require("console.table");
 var inquirer = require("inquirer");
-// var idList = [];
 var tableValues = [];
 
 /**
@@ -63,7 +62,18 @@ function viewProductsSalesByDepartment() {
     query += "ON v1.department_name=v2.department_name ";
     query += "GROUP BY department_name";
     connection.query(query, function (err, response) {
-        // console.log(response);
+        if (err) throw err;
+        displayDepartmentsAndProducts(response);
+        userOptions();
+    })
+}
+
+/**
+ * Select current details from the table
+ */
+function viewDepartments() {
+    clearConsole();
+    connection.query("SELECT * FROM departments", function (err, response) {
         if (err) throw err;
         displayDepartments(response);
         userOptions();
@@ -71,41 +81,19 @@ function viewProductsSalesByDepartment() {
 }
 
 /**
- * Add a new item to the inventory
+ * Add a new department category
  */
 function createNewDepartment() {
     clearConsole();
-    // inquirer.prompt([
-    //     {
-    //         type: "input",
-    //         name: "productName",
-    //         message: "Enter Name of Product:"
-    //     },
-    //     {
-    //         type: "input",
-    //         name: "department",
-    //         message: "Enter Product Department:"
-    //     },
-    //     {
-    //         type: "input",
-    //         name: "price",
-    //         message: "Enter Price Per Unit:",
-    //         validate: function (value) {
-    //             return validateIsNumeric(value);
-    //         }
-    //     },
-    //     {
-    //         type: "input",
-    //         name: "count",
-    //         message: "Enter Number of Units:",
-    //         validate: function (value) {
-    //             return validateIsNumeric(value);
-    //         }
-    //     }
-    // ]).then(function (answer) {
-    //     addProduct(answer.productName, answer.department,
-    //         parseFloat(answer.price), parseInt(answer.count));
-    // });
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "departmentName",
+            message: "Enter New Department Name:"
+        }
+    ]).then(function (answer) {
+        addDepartment(answer.departmentName);
+    });
 }
 
 /**
@@ -116,9 +104,9 @@ function closeAndExit() {
 }
 
 /**
- * Select items from the products table
+ * Select items from the departments and products table
  */
-function displayDepartments(response) {
+function displayDepartmentsAndProducts(response) {
     tableValues = [];
     for (var i = 0; i < response.length; i++) {
         var totalProfits = response[i].product_sales - response[i].over_head_costs;
@@ -136,77 +124,37 @@ function displayDepartments(response) {
 }
 
 /**
- * SQL to update the stock quantity of the products table
- * @param id 
- * @param addUnits 
+ * Select items from the departments table
  */
-function updateQuantity(id, addUnits) {
-    connection.query("SELECT * FROM products WHERE item_id=?", [id], function (err, response) {
-        if (err) throw err;
-        var name = response[0].product_name;
-        var currentQuantity = parseInt(response[0].stock_quantity);
-        var newQuantity = currentQuantity + addUnits;
-        connection.query("UPDATE products SET ? WHERE ?",
-            [
-                {
-                    stock_quantity: newQuantity
-                },
-                {
-                    item_id: id
-                }
-            ], function (err, response) {
-                if (err) throw err;
-                clearConsole();
-                consoleMessage("Number of " + name + " in stock raised from " +
-                    currentQuantity + " to " + newQuantity);
-                userOptions();
-            })
-
-    })
+function displayDepartments(response) {
+    tableValues = [];
+    for (var i = 0; i < response.length; i++) {
+        tableValues.push(
+            {
+                Department_ID: response[i].department_id,
+                Department_Name: response[i].department_name,
+                Overhead_Costs: "$" + response[i].over_head_costs.toFixed(2)
+            }
+        )
+    }
+    console.table(tableValues);
 }
 
 /**
- * SQL to add a new item to the inventory
- * @param name 
+ * SQL to add a new department to departments table
  * @param department 
- * @param price 
- * @param count 
  */
-function addProduct(name, department, price, count) {
-    connection.query("INSERT INTO products SET ?",
+function addDepartment(department) {
+    connection.query("INSERT INTO departments SET ?",
         {
-            product_name: name,
-            department_name: department,
-            price: price,
-            stock_quantity: count
+            department_name: department
         }
         , function (err, response) {
             if (err) throw err;
             clearConsole();
-            consoleMessage("Added new item to Inventory");
-            displayEntry(name, department, price, count);
-            userOptions();
+            console.log("Added New Department " + department);
+            viewDepartments();
         })
-}
-
-/**
- * Display an inventory item
- * @param name 
- * @param department 
- * @param price 
- * @param quantity 
- */
-function displayEntry(name, department, price, quantity) {
-    tableValues = [];
-    tableValues.push(
-        {
-            ID: name,
-            Name: department,
-            Price: "$" + price.toFixed(2),
-            Quantity: quantity
-        }
-    )
-    console.table(tableValues);
 }
 
 /**
@@ -214,27 +162,4 @@ function displayEntry(name, department, price, quantity) {
  */
 function clearConsole() {
     process.stdout.write('\x1B[2J\x1B[0f');
-}
-
-/**
- * Format a console message
- * @param message 
- */
-function consoleMessage(message) {
-    console.log("  ");
-    console.log("+----------------------------------------------------------+");
-    console.log(message);
-    console.log("+----------------------------------------------------------+");
-    console.log("  ");
-}
-
-/**
- * Validate that the requested value is numeric
- * @param value 
- */
-function validateIsNumeric(value) {
-    if (isNaN(value) === true) {
-        return "Value Must Be Numeric";
-    }
-    return true;
 }
