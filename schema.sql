@@ -44,4 +44,10 @@ CREATE TABLE departments (
     PRIMARY KEY (department_id)
 );
 
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Electronics", 5000.56);
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Musical Instruments", 1235.21);
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Housewares", 4635.23);
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Clothing and Accessories", 1500.25);
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Food", 2566.01);
+INSERT INTO departments (department_name, over_head_costs) VALUES ("Office Supplies", 3541.66);
 

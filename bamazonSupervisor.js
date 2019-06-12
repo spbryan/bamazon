@@ -57,11 +57,17 @@ function userOptions() {
  */
 function viewProductsSalesByDepartment() {
     clearConsole();
-    // connection.query("SELECT * FROM products", function (err, response) {
-    //     if (err) throw err;
-    //     displayInventory(response);
-    //     userOptions();
-    // })
+    var query = "SELECT v1.department_id, v1.department_name, v1.over_head_costs, SUM(v2.product_sales) AS product_sales "
+    query += "FROM departments v1 ";
+    query += "INNER JOIN products v2 ";
+    query += "ON v1.department_name=v2.department_name ";
+    query += "GROUP BY department_name";
+    connection.query(query, function (err, response) {
+        // console.log(response);
+        if (err) throw err;
+        displayDepartments(response);
+        userOptions();
+    })
 }
 
 /**
@@ -112,15 +118,17 @@ function closeAndExit() {
 /**
  * Select items from the products table
  */
-function displayInventory(response) {
+function displayDepartments(response) {
     tableValues = [];
     for (var i = 0; i < response.length; i++) {
+        var totalProfits = response[i].product_sales - response[i].over_head_costs;
         tableValues.push(
             {
-                ID: response[i].item_id,
-                Name: response[i].product_name,
-                Price: "$" + response[i].price.toFixed(2),
-                Quantity: response[i].stock_quantity
+                Department_ID: response[i].department_id,
+                Department_Name: response[i].department_name,
+                Overhead_Costs: "$" + response[i].over_head_costs.toFixed(2),
+                Product_Sales: "$" + response[i].product_sales.toFixed(2),
+                Total_Profit: "$" + totalProfits.toFixed(2)
             }
         )
     }
