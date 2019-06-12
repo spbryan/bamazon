@@ -114,37 +114,47 @@ function addToInventory() {
  */
 function addNewProduct() {
     clearConsole();
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "productName",
-            message: "Enter Name of Product:"
-        },
-        {
-            type: "input",
-            name: "department",
-            message: "Enter Product Department:"
-        },
-        {
-            type: "input",
-            name: "price",
-            message: "Enter Price Per Unit:",
-            validate: function (value) {
-                return validateIsNumeric(value);
-            }
-        },
-        {
-            type: "input",
-            name: "count",
-            message: "Enter Number of Units:",
-            validate: function (value) {
-                return validateIsNumeric(value);
-            }
+    connection.query("SELECT DISTINCT department_name FROM products", function (err, response) {
+        if (err) throw err;
+        var departments = [];
+
+        for (var i = 0; i < response.length; i++) {
+            departments.push(response[i].department_name);
         }
-    ]).then(function (answer) {
-        addProduct(answer.productName, answer.department,
-            parseFloat(answer.price), parseInt(answer.count));
-    });
+
+        inquirer.prompt([
+            {
+                type: "input",
+                name: "productName",
+                message: "Enter Name of Product:"
+            },
+            {
+                type: "list",
+                name: "department",
+                message: "Select Product Department:",
+                choices: departments
+            },
+            {
+                type: "input",
+                name: "price",
+                message: "Enter Price Per Unit:",
+                validate: function (value) {
+                    return validateIsNumeric(value);
+                }
+            },
+            {
+                type: "input",
+                name: "count",
+                message: "Enter Number of Units:",
+                validate: function (value) {
+                    return validateIsNumeric(value);
+                }
+            }
+        ]).then(function (answer) {
+            addProduct(answer.productName, answer.department,
+                parseFloat(answer.price), parseInt(answer.count));
+        });
+    })
 }
 
 /**
