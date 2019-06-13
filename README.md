@@ -1,6 +1,6 @@
 # bamazon
 ## Application Description
-_An "amazon" like application that interacts with with a MySQL data base to interact with product inventory from the perspective of a Customer, Manager, or Supervisor.  Current functionality includes features to view and manipulate details on products and departments MySQL tables.
+_An "amazon" like application that interacts with with a MySQL data base to interact with product inventory from the perspective of a Customer, Manager, or Supervisor.  Current functionality includes features to view and manipulate details on products and departments MySQL tables._
 
 ## Application Organization
 The application is organized with separate js files defined for each perspective:
@@ -10,7 +10,9 @@ The application is organized with separate js files defined for each perspective
 
 ## Running the Application
 To run this application use the command line:
+
 __Customer View__
+
 node bamazonCustomer.js
 * Select Y to place an order
 * Enter an Item ID from the displayed list of products
@@ -18,6 +20,7 @@ node bamazonCustomer.js
 * Select Y/N to place another order
 
 __Manager View__
+
 node bamazonManager.js
 * View Products For Sale - Display the current inventory from the products table
 * View Low Inventory - Display a list of products with a count less than 5 in the products table
@@ -30,6 +33,7 @@ node bamazonManager.js
 * Exit
 
 __Supervisor View__
+
 node bamazonSupervisor.js
 * View Product Sales By Department - Display current sales and profits for all departments
 * Create New Department - Create new department entry (will expose new entry in Manager View for ordering products)
